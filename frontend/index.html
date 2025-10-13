@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Imbulix-LandApp - CTR Viewer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; background:#f7f7f7; color:#222; }
+    h1 { margin-bottom: 8px; }
+    .controls { margin-bottom: 12px; }
+    input[type="text"] { padding:10px; width:180px; border-radius:6px; border:1px solid #aaa; }
+    button { padding:10px 14px; margin-left:6px; border-radius:6px; border:none; cursor:pointer; }
+    .verde { background:#28a745; color:white; }
+    .vermelho { background:#dc3545; color:white; }
+    iframe { width:100%; height:520px; border:1px solid #ccc; border-radius:6px; margin-top:12px; background:white; }
+    table { width:100%; border-collapse:collapse; margin-top:18px; background:white; }
+    th, td { border:1px solid #ddd; padding:10px; text-align:center; }
+    th { background:#f0f0f0; }
+  </style>
+</head>
+<body>
+  <h1>Imbulix-LandApp — Visualizador CTR</h1>
+  <div class="controls">
+    <input id="codigo" maxlength="8" placeholder="Digite código (8 dígitos)" />
+    <button onclick="buscar()">Buscar</button>
+    <button onclick="mostrarHistorico()">Ver Histórico</button>
+    <button onclick="baixarCSV()">Baixar CSV</button>
+  </div>
+
+  <div id="mensagem" style="margin-bottom:8px;color:#555;"></div>
+
+  <div id="viewerArea" style="display:none;">
+    <iframe id="docFrame" src=""></iframe>
+    <div style="margin-top:10px;">
+      <button class="verde" onclick="registrar('Aceito')">Aceitar</button>
+      <button class="vermelho" onclick="registrar('Aceito com restrição')">Aceitar com Restrição</button>
+    </div>
+  </div>
+
+  <h2 style="margin-top:20px;">Histórico</h2>
+  <table id="historicoTable">
+    <thead><tr><th>Data de Envio</th><th>Código</th><th>Status</th></tr></thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    const backend = "https://imbulix-landapp.onrender.com";
+
+    let lastCodigo = "";
+    let lastDataEnvio = "";
+
+    async function buscar(){
+      const codigo = document.getElementById('codigo').value.trim();
+      const msg = document.getElementById('mensagem');
+      if(!/^\d{8}$/.test(codigo)){ alert('Digite um código válido de 8 dígitos.'); return; }
+      msg.textContent = 'Buscando documento...';
+      try{
+        const res = await fetch(`${backend}/buscar/${codigo}`);
+        if(!res.ok){ const err = await res.json(); msg.textContent = 'Erro: ' + (err.detail || 'Não encontrado'); return; }
+        const data = await res.json();
+        document.getElementById('viewerArea').style.display = 'block';
+        document.getElementById('docFrame').src = data.url;
+        lastCodigo = codigo;
+        lastDataEnvio = data.data_envio || 'Não encontrada';
+        msg.textContent = `Data de Envio: ${lastDataEnvio}`;
+      }catch(e){
+        msg.textContent = 'Erro ao buscar: ' + e.message;
+      }
+    }
+
+    async function registrar(status){
+      if(!lastCodigo){ alert('Busque um documento antes de registrar.'); return; }
+      try{
+        const res = await fetch(`${backend}/registrar`, {
+          method:'POST',
+          headers:{'Content-Type':'application/json'},
+          body: JSON.stringify({codigo:lastCodigo, data_envio:lastDataEnvio, status})
+        });
+        if(!res.ok){ const err = await res.json(); alert('Erro: ' + (err.detail||'')); return; }
+        alert('Registrado com sucesso.');
+        carregarHistorico();
+      }catch(e){
+        alert('Erro ao registrar: ' + e.message);
+      }
+    }
+
+    async function carregarHistorico(){
+      try{
+        const res = await fetch(`${backend}/historico`);
+        const dados = await res.json();
+        const tbody = document.querySelector('#historicoTable tbody');
+        tbody.innerHTML = '';
+        dados.forEach(r=>{
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td>${r['Data de Envio']}</td><td>${r['Código']}</td><td style="color:${r['Status']==='Aceito'?'green':'red'}">${r['Status']}</td>`;
+          tbody.appendChild(tr);
+        });
+      }catch(e){ console.error(e); }
+    }
+
+    function mostrarHistorico(){ carregarHistorico(); alert('Histórico carregado.'); }
+
+    function baixarCSV(){
+      window.location.href = `${backend}/resultados.csv`;
+    }
+
+    // load history on open
+    carregarHistorico();
+  </script>
+</body>
+</html>
