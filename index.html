@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-br">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Imbulix-LandApp — CTR Viewer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">Imbulix <span>&</span> LandApp</div>
+  </header>
+
+  <main class="container">
+    <section class="card search-card">
+      <h1>Consultar CTR</h1>
+      <div class="controls">
+        <input id="codigo" maxlength="8" placeholder="Digite o código (8 dígitos)" />
+        <button class="btn primary" id="btnBuscar">Buscar</button>
+        <button class="btn outline" id="btnHistorico" onclick="carregarHistorico()">Ver Histórico</button>
+        <button class="btn ghost" id="btnExport" onclick="baixarExcel()">Exportar Excel</button>
+      </div>
+      <div id="mensagem" class="mensagem"></div>
+    </section>
+
+    <section id="viewerArea" class="card viewer-card hidden">
+      <iframe id="docFrame"></iframe>
+      <div class="actions">
+        <button class="btn accept" onclick="registrar('Aceito')">Aceitar</button>
+        <button class="btn restrict" onclick="registrar('Aceito com restrição')">Aceitar com Restrição</button>
+      </div>
+    </section>
+
+    <section class="card history-card">
+      <h2>Histórico</h2>
+      <div class="table-wrap">
+        <table id="historicoTable">
+          <thead><tr><th>Envio</th><th>Código</th><th>Classe do Material</th><th>Valor</th><th>Status</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">© Imbulix-LandApp</footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
