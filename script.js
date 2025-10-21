@@ -1,4 +1,4 @@
-const backend = "https://imbulix-landapp.onrender.com"; // update if different
+const backend = "https://imbulix-landapp-backend.onrender.com"; // update if different
 const btnBuscar = document.getElementById('btnBuscar');
 const codigoInput = document.getElementById('codigo');
 const mensagem = document.getElementById('mensagem');
